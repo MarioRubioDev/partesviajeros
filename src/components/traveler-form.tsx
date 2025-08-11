@@ -123,17 +123,17 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const form = useForm<z.infer<typeof TravelerFormSchema>>({
     resolver: zodResolver(TravelerFormSchema),
     defaultValues: {
-      codigoEstablecimiento: "0000000000",
+      codigoEstablecimiento: "",
       contrato: {
-        referencia: "20250810-01",
+        referencia: "",
         fechaContrato: new Date(),
         fechaEntrada: new Date(),
         fechaSalida: getDefaultFechaSalida(),
         numPersonas: 1,
         numHabitaciones: 1,
-        internet: true,
+        internet: false,
         pago: {
-          tipoPago: "TARJT",
+          tipoPago: undefined,
           fechaPago: new Date(),
           medioPago: "",
           titular: "",
@@ -142,27 +142,26 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
       },
       persona: {
         rol: "VI",
-        nombre: "lucas",
-        apellido1: "Martinez",
-        apellido2: "Ruiz",
-        tipoDocumento: "NIF",
-        numeroDocumento: "12345678T",
-        soporteDocumento: "ABC123456",
-        fechaNacimiento: new Date("1996-02-29"),
+        nombre: "",
+        apellido1: "",
+        apellido2: "",
+        tipoDocumento: undefined,
+        numeroDocumento: "",
+        soporteDocumento: "",
         nacionalidad: "ESP",
-        sexo: "H",
+        sexo: undefined,
         direccion: {
-          direccion: "Paseo de la castellana, 13",
+          direccion: "",
           direccionComplementaria: "",
-          codigoMunicipio: "28079",
-          nombreMunicipio: "Madrid",
-          codigoPostal: "28046",
+          codigoMunicipio: "",
+          nombreMunicipio: "",
+          codigoPostal: "",
           pais: "ESP",
         },
-        telefono: "666123456",
+        telefono: "",
         telefono2: "",
-        correo: "correo@correo.es",
-        parentesco: "",
+        correo: "",
+        parentesco: undefined,
       },
     },
   });
@@ -177,8 +176,8 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const paisSeleccionado = form.watch("persona.direccion.pais");
 
   useEffect(() => {
-      form.setValue("persona.direccion.codigoMunicipio", "");
-      form.setValue("persona.direccion.nombreMunicipio", "");
+      form.resetField("persona.direccion.codigoMunicipio");
+      form.resetField("persona.direccion.nombreMunicipio");
   }, [paisSeleccionado, form]);
 
   const onSubmit = (data: z.infer<typeof TravelerFormSchema>) => {
@@ -203,7 +202,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
             <FormItem>
               <FormLabel>Código de Establecimiento</FormLabel>
               <FormControl>
-                <Input placeholder="Código del hotel o alojamiento" {...field} />
+                <Input placeholder="0000000000" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -220,7 +219,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Referencia</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="20250810-01" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -266,7 +265,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Nº Personas</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input type="number" placeholder="1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -279,7 +278,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Nº Habitaciones</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input type="number" placeholder="1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -316,7 +315,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Seleccionar tipo de pago"/>
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -413,7 +412,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="Lucas" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -426,7 +425,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Primer Apellido</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="Martinez" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -439,7 +438,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Segundo Apellido (Opcional)</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="Ruiz" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -457,7 +456,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Seleccionar tipo de documento" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -479,7 +478,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Número Documento</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="12345678T" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -548,7 +547,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Seleccionar sexo"/>
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -568,7 +567,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Teléfono</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="666123456" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -594,7 +593,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem className="col-span-full">
                 <FormLabel>Correo Electrónico</FormLabel>
                 <FormControl>
-                  <Input type="email" {...field} />
+                  <Input type="email" placeholder="correo@correo.es" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -640,7 +639,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem className="col-span-full">
                 <FormLabel>Dirección</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="Paseo de la castellana, 13" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -666,10 +665,10 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Municipio</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Selecciona un municipio" />
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -687,9 +686,9 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 name="persona.direccion.nombreMunicipio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre Municipio (si no es ESP)</FormLabel>
+                    <FormLabel>Nombre Municipio</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="Nombre del municipio" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -702,7 +701,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                   <FormItem>
                     <FormLabel>Código Municipio (Opcional)</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="Ej. 28079" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -718,7 +717,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Código Postal</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="28046" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
