@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import paises from "@/lib/data/paises.json";
-import municipios from "@/lib/data/municipios.json";
+import municipiosData from "@/lib/data/municipios.json";
 import provincias from "@/lib/data/provincias.json";
 
 const pagoSchema = z.object({
@@ -122,6 +122,7 @@ const getDefaultFechaSalida = () => {
 export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+    const [municipios, setMunicipios] = useState<{ codigo: string; municipio: string }[]>([]);
 
   const form = useForm<z.infer<typeof TravelerFormSchema>>({
     resolver: zodResolver(TravelerFormSchema),
@@ -178,14 +179,27 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   }, [form]);
 
   const paisSeleccionado = form.watch("persona.direccion.pais");
+  const provinciaSeleccionada = form.watch("persona.direccion.provincia");
 
   useEffect(() => {
       if (paisSeleccionado !== 'ESP') {
           form.resetField("persona.direccion.provincia");
+          setMunicipios([]);
       }
       form.resetField("persona.direccion.codigoMunicipio");
       form.resetField("persona.direccion.nombreMunicipio");
   }, [paisSeleccionado, form]);
+
+  useEffect(() => {
+    if (paisSeleccionado === 'ESP' && provinciaSeleccionada) {
+        const filteredMunicipios = municipiosData.filter(m => m.codigo.startsWith(provinciaSeleccionada));
+        setMunicipios(filteredMunicipios);
+    } else {
+        setMunicipios([]);
+    }
+    form.resetField("persona.direccion.codigoMunicipio");
+    form.resetField("persona.direccion.nombreMunicipio");
+}, [provinciaSeleccionada, paisSeleccionado, form]);
 
   const onSubmit = (data: z.infer<typeof TravelerFormSchema>) => {
     startTransition(() => {
@@ -693,6 +707,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
             )}
           />
         {paisSeleccionado === 'ESP' && (
+            <>
           <FormField
             control={form.control}
             name="persona.direccion.provincia"
@@ -701,7 +716,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormLabel>Provincia</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -720,20 +735,56 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               </FormItem>
             )}
           />
+            <FormField
+                control={form.control}
+                name="persona.direccion.nombreMunicipio"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Municipio</FormLabel>
+                    <Select
+                    onValueChange={(value) => {
+                        const municipioSeleccionado = municipios.find(m => m.codigo === value);
+                        if (municipioSeleccionado) {
+                            form.setValue("persona.direccion.nombreMunicipio", municipioSeleccionado.municipio);
+                            form.setValue("persona.direccion.codigoMunicipio", municipioSeleccionado.codigo);
+                        }
+                    }}
+                    value={form.getValues("persona.direccion.codigoMunicipio")}
+                    >
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar municipio" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {municipios.map((m) => (
+                        <SelectItem key={m.codigo} value={m.codigo}>
+                            {m.municipio}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          </>
         )}
-           <FormField
-            control={form.control}
-            name="persona.direccion.nombreMunicipio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Municipio</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nombre del municipio" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {paisSeleccionado !== 'ESP' && (
+             <FormField
+                control={form.control}
+                name="persona.direccion.nombreMunicipio"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Municipio</FormLabel>
+                    <FormControl>
+                    <Input placeholder="Nombre del municipio" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
           <FormField
             control={form.control}
             name="persona.direccion.codigoMunicipio"
@@ -741,7 +792,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               <FormItem>
                 <FormLabel>Código Municipio</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej. 28079" {...field} />
+                  <Input placeholder="Ej. 28079" {...field} readOnly={paisSeleccionado === 'ESP'} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
