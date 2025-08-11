@@ -99,7 +99,7 @@ export default function Home() {
     <main className="container mx-auto p-4 md:p-8">
       <header className="text-center mb-10">
         <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary-dark mb-2">
-          XML Traveler's Pie
+          Parte de Viajeros
         </h1>
         <p className="text-lg text-muted-foreground">
           Generador de partes de entrada de viajeros para hospedajes.
@@ -112,7 +112,7 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline">
                 <Hotel className="text-primary" />
-                Datos del Parte de Viajero
+                Datos del Viajero
               </CardTitle>
               <CardDescription>
                 Rellene todos los campos para generar el XML de la petición.
