@@ -15,14 +15,19 @@ import { Input } from "./input"
 interface DatePickerProps {
   field: ControllerRenderProps<any, any>;
   showTime?: boolean;
+  useCurrentTime?: boolean;
 }
 
-export function DatePicker({ field, showTime = false }: DatePickerProps) {
+export function DatePicker({ field, showTime = false, useCurrentTime = false }: DatePickerProps) {
   const formatString = showTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
   const [dateString, setDateString] = React.useState(field.value ? format(field.value, formatString, { locale: es }) : "");
 
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (selectedDate) {
+      if(useCurrentTime) {
+        const now = new Date();
+        selectedDate.setHours(now.getHours(), now.getMinutes());
+      }
       field.onChange(selectedDate);
       setDateString(format(selectedDate, formatString, { locale: es }));
     }

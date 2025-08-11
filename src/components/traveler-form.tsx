@@ -122,7 +122,7 @@ const getDefaultFechaSalida = () => {
 export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-    const [municipios, setMunicipios] = useState<{ codigo: string; municipio: string }[]>([]);
+  const [municipios, setMunicipios] = useState<{ codigo: string; municipio: string }[]>([]);
 
   const form = useForm<z.infer<typeof TravelerFormSchema>>({
     resolver: zodResolver(TravelerFormSchema),
@@ -264,7 +264,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Fecha Entrada</FormLabel>
-                <DatePicker field={field} showTime />
+                <DatePicker field={field} showTime useCurrentTime />
                 <FormMessage />
               </FormItem>
             )}
