@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import paises from "@/lib/data/paises.json";
+import municipios from "@/lib/data/municipios.json";
+import { Combobox } from "@/components/ui/combobox";
 
 const pagoSchema = z.object({
     tipoPago: z.string().min(1, "El tipo de pago es obligatorio"),
@@ -39,7 +41,7 @@ const contratoSchema = z.object({
 const direccionSchema = z.object({
     direccion: z.string().min(1, "La dirección es obligatoria"),
     direccionComplementaria: z.string().optional(),
-    codigoMunicipio: z.string().min(1, "El código de municipio es obligatorio"),
+    codigoMunicipio: z.string().min(5, "El código de municipio es obligatorio").max(5),
     nombreMunicipio: z.string().optional(),
     codigoPostal: z.string().min(1, "El código postal es obligatorio"),
     pais: z.string().min(3, "El país es obligatorio (ISO alfa-3)"),
@@ -81,6 +83,10 @@ const getDefaultFechaSalida = () => {
     return fechaSalida;
 }
 
+const municipioOptions = municipios.map(m => ({
+    label: `${m.nombre} (${m.codigo})`,
+    value: m.codigo,
+}));
 
 export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -120,9 +126,9 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
         direccion: {
             direccion: "Paseo de la castellana, 13",
             direccionComplementaria: "",
-            codigoMunicipio: "45176",
+            codigoMunicipio: "28079", // Default to Madrid, for example
             nombreMunicipio: "",
-            codigoPostal: "45217",
+            codigoPostal: "28046",
             pais: "ESP"
         },
         telefono: "666123456",
@@ -142,6 +148,8 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
         });
     });
   };
+
+  const selectedPais = form.watch("persona.direccion.pais");
 
   return (
     <Form {...form}>
@@ -177,7 +185,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormItem className="flex flex-col"><FormLabel>Fecha Entrada</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="contrato.fechaSalida" render={({ field }) => (
-                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
+                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormMessage>
             )} />
             <FormField control={form.control} name="contrato.numPersonas" render={({ field }) => (
                 <FormItem><FormLabel>Nº Personas</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
@@ -270,17 +278,63 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
             <FormField control={form.control} name="persona.direccion.direccionComplementaria" render={({ field }) => (
                 <FormItem className="col-span-full"><FormLabel>Dirección Complementaria (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
-             <FormField control={form.control} name="persona.direccion.codigoMunicipio" render={({ field }) => (
-                <FormItem><FormLabel>Código Municipio</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-            <FormField control={form.control} name="persona.direccion.nombreMunicipio" render={({ field }) => (
-                <FormItem><FormLabel>Nombre Municipio (si no es ESP)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+             
+            {selectedPais === 'ESP' ? (
+                <FormField
+                    control={form.control}
+                    name="persona.direccion.codigoMunicipio"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Municipio</FormLabel>
+                            <FormControl>
+                                <Combobox
+                                    options={municipioOptions}
+                                    value={field.value}
+                                    onChange={(value) => {
+                                        const municipio = municipios.find(m => m.codigo === value);
+                                        field.onChange(value);
+                                        form.setValue("persona.direccion.nombreMunicipio", "");
+                                        if (municipio && municipio.codigo_postal) {
+                                            form.setValue("persona.direccion.codigoPostal", municipio.codigo_postal);
+                                        }
+                                    }}
+                                    placeholder="Seleccionar municipio"
+                                    searchPlaceholder="Buscar municipio..."
+                                    noResultsMessage="No se encontraron municipios."
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            ) : (
+                <>
+                    <FormField control={form.control} name="persona.direccion.codigoMunicipio" render={({ field }) => (
+                        <FormItem><FormLabel>Código Municipio</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name="persona.direccion.nombreMunicipio" render={({ field }) => (
+                       <FormItem><FormLabel>Nombre Municipio</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                </>
+            )}
+            
             <FormField control={form.control} name="persona.direccion.codigoPostal" render={({ field }) => (
                 <FormItem><FormLabel>Código Postal</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="persona.direccion.pais" render={({ field }) => (
-                <FormItem><FormLabel>País (ISO3)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{paises.map(p => <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                <FormItem><FormLabel>País (ISO3)</FormLabel>
+                    <Select 
+                        onValueChange={(value) => {
+                            field.onChange(value);
+                            // Reset municipality fields when country changes
+                            form.setValue("persona.direccion.codigoMunicipio", "");
+                            form.setValue("persona.direccion.nombreMunicipio", "");
+                        }} 
+                        defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>{paises.map(p => <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                <FormMessage /></FormItem>
             )} />
         </div>
         
