@@ -193,7 +193,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormItem className="flex flex-col"><FormLabel>Fecha Entrada</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="contrato.fechaSalida" render={({ field }) => (
-                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormMessage>
+                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="contrato.numPersonas" render={({ field }) => (
                 <FormItem><FormLabel>Nº Personas</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
