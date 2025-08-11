@@ -60,7 +60,7 @@ const direccionSchema = z.object({
   direccion: z.string().min(1, "La dirección es obligatoria"),
   direccionComplementaria: z.string().optional(),
   codigoMunicipio: z.string().min(1, "El código de municipio es obligatorio"),
-  nombreMunicipio: z.string().optional(),
+  nombreMunicipio: z.string().min(1, "El nombre del municipio es obligatorio"),
   codigoPostal: z.string().min(1, "El código postal es obligatorio"),
   pais: z.string().min(3, "El país es obligatorio (ISO alfa-3)"),
 });
@@ -96,13 +96,14 @@ export const TravelerFormSchema = z.object({
   contrato: contratoSchema,
   persona: personaSchema,
 }).refine(data => {
-    if (data.persona.direccion.pais !== 'ESP' && !data.persona.direccion.nombreMunicipio) {
-        return false;
+    if (data.persona.direccion.pais === 'ESP') {
+        const codigoMunicipio = data.persona.direccion.codigoMunicipio;
+        return codigoMunicipio && /^\d{5}$/.test(codigoMunicipio);
     }
     return true;
 }, {
-    message: "El nombre del municipio es obligatorio si el país no es España",
-    path: ["persona.direccion.nombreMunicipio"],
+    message: "El código de municipio es obligatorio y debe tener 5 dígitos si el país es España.",
+    path: ["persona.direccion.codigoMunicipio"],
 });
 
 interface TravelerFormProps {
@@ -658,58 +659,32 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               </FormItem>
             )}
           />
-          {paisSeleccionado === "ESP" ? (
-             <FormField
-                control={form.control}
-                name="persona.direccion.codigoMunicipio"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Municipio</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecciona un municipio" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {municipios.map(m => <SelectItem key={m.codigo} value={m.codigo}>{m.municipio}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-          ) : (
-            <>
-              <FormField
-                control={form.control}
-                name="persona.direccion.nombreMunicipio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre Municipio</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre del municipio" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="persona.direccion.codigoMunicipio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código Municipio (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej. 28079" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
-
+           <FormField
+            control={form.control}
+            name="persona.direccion.nombreMunicipio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Municipio</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nombre del municipio" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="persona.direccion.codigoMunicipio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código Municipio</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ej. 28079" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="persona.direccion.codigoPostal"
@@ -763,3 +738,5 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     </Form>
   );
 }
+
+    

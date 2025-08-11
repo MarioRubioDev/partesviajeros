@@ -61,7 +61,7 @@ export default function Home() {
           <direccion>${persona.direccion.direccion}</direccion>
           ${persona.direccion.direccionComplementaria ? `<direccionComplementaria>${persona.direccion.direccionComplementaria}</direccionComplementaria>` : '<direccionComplementaria></direccionComplementaria>'}
           <codigoMunicipio>${persona.direccion.codigoMunicipio}</codigoMunicipio>
-          ${persona.direccion.nombreMunicipio ? `<nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>` : '<nombreMunicipio></nombreMunicipio>'}
+          <nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>
           <codigoPostal>${persona.direccion.codigoPostal}</codigoPostal>
           <pais>${persona.direccion.pais}</pais>
         </direccion>
@@ -117,3 +117,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
