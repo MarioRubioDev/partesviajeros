@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { format, parse } from "date-fns"
+import { format, parse, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 import type { ControllerRenderProps } from "react-hook-form"
@@ -22,43 +22,72 @@ interface DatePickerProps {
 export function DatePicker({ field, showTime = false, useCurrentTime = false, defaultTime }: DatePickerProps) {
   const formatString = showTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
   const [dateString, setDateString] = React.useState(field.value ? format(field.value, formatString, { locale: es }) : "");
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (selectedDate) {
-      if(useCurrentTime) {
-        const now = new Date();
-        selectedDate.setHours(now.getHours(), now.getMinutes());
-      } else if (showTime && defaultTime) {
-        selectedDate.setHours(defaultTime.hours, defaultTime.minutes, 0, 0);
+      const newDate = new Date(selectedDate);
+      if(showTime) {
+        if (useCurrentTime) {
+          const now = new Date();
+          newDate.setHours(now.getHours(), now.getMinutes());
+        } else if (defaultTime) {
+          newDate.setHours(defaultTime.hours, defaultTime.minutes, 0, 0);
+        } else if(field.value instanceof Date) {
+          // Keep existing time if any
+          newDate.setHours(field.value.getHours(), field.value.getMinutes());
+        }
       }
-      field.onChange(selectedDate);
-      setDateString(format(selectedDate, formatString, { locale: es }));
+      field.onChange(newDate);
+      setDateString(format(newDate, formatString, { locale: es }));
     }
+    setPopoverOpen(false);
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDateString(e.target.value);
-    try {
-      // Use 'dd/MM/yyyy HH:mm' for parsing to be less strict while typing
-      const parsedDate = parse(e.target.value, showTime ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy', new Date());
-      if (!isNaN(parsedDate.getTime())) {
+    const value = e.target.value;
+    setDateString(value);
+
+    // Try to parse the date as the user types
+    const dateParts = value.split(" ")[0].split("/");
+    if (dateParts.length === 3) {
+      const [day, month, year] = dateParts;
+      if (year.length >= 4) { // Only attempt to parse if the year seems complete
+        const parsedDate = parse(value, formatString, new Date());
+        if (isValid(parsedDate)) {
           field.onChange(parsedDate);
+        }
       }
-    } catch(error) {
-      // Ignore invalid date formats while typing
+    }
+  }
+  
+  const handleBlur = () => {
+    // When the user leaves the field, format the current valid date or reset
+    if (field.value && isValid(field.value)) {
+      setDateString(format(field.value, formatString, { locale: es }));
+    } else {
+      setDateString("");
     }
   }
 
+
   React.useEffect(() => {
-    if (field.value) {
-      setDateString(format(field.value, formatString, { locale: es }));
+    if (field.value && isValid(field.value)) {
+      const currentString = format(field.value, formatString, { locale: es });
+      // Only update if the string representation is different
+      // This prevents the user's input from being overwritten while typing
+      if (currentString !== dateString) {
+          setDateString(currentString);
+      }
+    } else if (!field.value) {
+      setDateString("");
     }
   }, [field.value, formatString]);
 
 
   return (
     <div className="flex gap-2">
-      <Popover>
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <Button
             variant={"outline"}
@@ -83,6 +112,7 @@ export function DatePicker({ field, showTime = false, useCurrentTime = false, de
       <Input 
         value={dateString}
         onChange={handleInputChange}
+        onBlur={handleBlur}
         placeholder={showTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy"}
       />
     </div>
