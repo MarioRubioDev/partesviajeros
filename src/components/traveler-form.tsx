@@ -327,7 +327,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
             )}
             
             <FormField control={form.control} name="persona.direccion.codigoPostal" render={({ field }) => (
-                <FormItem><FormLabel>Código Postal</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Código Postal</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
             )} />
             <FormField control={form.control} name="persona.direccion.pais" render={({ field }) => (
                 <FormItem><FormLabel>País (ISO3)</FormLabel>
