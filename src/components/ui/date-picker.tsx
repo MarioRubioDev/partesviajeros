@@ -16,9 +16,10 @@ interface DatePickerProps {
   field: ControllerRenderProps<any, any>;
   showTime?: boolean;
   useCurrentTime?: boolean;
+  defaultTime?: { hours: number; minutes: number };
 }
 
-export function DatePicker({ field, showTime = false, useCurrentTime = false }: DatePickerProps) {
+export function DatePicker({ field, showTime = false, useCurrentTime = false, defaultTime }: DatePickerProps) {
   const formatString = showTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
   const [dateString, setDateString] = React.useState(field.value ? format(field.value, formatString, { locale: es }) : "");
 
@@ -27,6 +28,8 @@ export function DatePicker({ field, showTime = false, useCurrentTime = false }: 
       if(useCurrentTime) {
         const now = new Date();
         selectedDate.setHours(now.getHours(), now.getMinutes());
+      } else if (showTime && defaultTime) {
+        selectedDate.setHours(defaultTime.hours, defaultTime.minutes, 0, 0);
       }
       field.onChange(selectedDate);
       setDateString(format(selectedDate, formatString, { locale: es }));

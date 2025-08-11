@@ -275,7 +275,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Fecha Salida</FormLabel>
-                <DatePicker field={field} showTime />
+                <DatePicker field={field} showTime defaultTime={{ hours: 12, minutes: 0 }} />
                 <FormMessage />
               </FormItem>
             )}
