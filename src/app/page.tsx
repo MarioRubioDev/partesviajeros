@@ -50,7 +50,7 @@ export default function Home() {
         <rol>${persona.rol}</rol>
         <nombre>${persona.nombre}</nombre>
         <apellido1>${persona.apellido1}</apellido1>
-        ${persona.apellido2 ? `<apellido2>${persona.apellido2}</apellido2>` : ''}
+        ${persona.apellido2 ? `<apellido2>${persona.apellido2}</apellido2>` : '<apellido2></apellido2>'}
         <tipoDocumento>${persona.tipoDocumento}</tipoDocumento>
         <numeroDocumento>${persona.numeroDocumento}</numeroDocumento>
         <soporteDocumento>${persona.soporteDocumento}</soporteDocumento>
@@ -73,10 +73,8 @@ export default function Home() {
     </comunicacion>
   </solicitud>
 </ns2:peticion>`;
-    
-    const formattedXml = formatXml(xmlString);
 
-    const blob = new Blob([formattedXml], { type: "application/xml" });
+    const blob = new Blob([xmlString], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
