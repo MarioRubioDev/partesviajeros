@@ -1,0 +1,54 @@
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="travelerPie">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="travelerName" type="xs:string" minOccurs="1" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>The full name of the traveler.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="destination" type="xs:string" minOccurs="1" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>The city or country of destination.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="departureDate" type="xs:date" minOccurs="1" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>The date of departure for the trip.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="travelPurpose" minOccurs="1" maxOccurs="1">
+           <xs:annotation>
+            <xs:documentation>The primary reason for the travel, such as business or vacation.</xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="vacation"/>
+              <xs:enumeration value="business"/>
+              <xs:enumeration value="family"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="transportMode" minOccurs="1" maxOccurs="1">
+           <xs:annotation>
+            <xs:documentation>The mode of transport used for the main leg of the journey.</xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="plane"/>
+              <xs:enumeration value="train"/>
+              <xs:enumeration value="car"/>
+              <xs:enumeration value="ship"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="notes" type="xs:string" minOccurs="0" maxOccurs="1">
+           <xs:annotation>
+            <xs:documentation>Any additional notes or comments about the trip.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

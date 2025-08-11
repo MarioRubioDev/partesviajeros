@@ -1,3 +1,142 @@
+
+"use client";
+
+import { useState } from "react";
+import type { z } from "zod";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileCode, Download, UploadCloud } from "lucide-react";
+import TravelerForm from "@/components/traveler-form";
+import type { TravelerFormSchema } from "@/components/traveler-form";
+
 export default function Home() {
-  return <></>;
+  const [schemaContent, setSchemaContent] = useState<string | null>(null);
+  const [isSchemaLoading, setIsSchemaLoading] = useState(false);
+  const [generatedXml, setGeneratedXml] = useState<string | null>(null);
+
+  const handleLoadSchema = async () => {
+    setIsSchemaLoading(true);
+    try {
+      const response = await fetch("/schemas/traveler_schema.xsd");
+      const text = await response.text();
+      setSchemaContent(text);
+    } catch (error) {
+      console.error("Failed to load schema:", error);
+      // Here you might want to show a toast notification
+    } finally {
+      setIsSchemaLoading(false);
+    }
+  };
+
+  const handleGenerateXml = (data: z.infer<typeof TravelerFormSchema>) => {
+    const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
+<travelerPie xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="traveler_schema.xsd">
+  <travelerName>${data.travelerName}</travelerName>
+  <destination>${data.destination}</destination>
+  <departureDate>${data.departureDate.toISOString().split('T')[0]}</departureDate>
+  <travelPurpose>${data.travelPurpose}</travelPurpose>
+  <transportMode>${data.transportMode}</transportMode>
+  ${data.notes ? `<notes>${data.notes}</notes>` : ""}
+</travelerPie>`;
+    
+    // Pretty print the XML for display
+    const formattedXml = formatXml(xmlString);
+    setGeneratedXml(formattedXml);
+  };
+
+  const handleDownloadXml = () => {
+    if (!generatedXml) return;
+    const blob = new Blob([generatedXml], { type: "application/xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "traveler-pie.xml";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  function formatXml(xml: string) {
+    let formatted = '', indent = '';
+    const tab = '  ';
+    xml.split(/>\s*</).forEach(function(node) {
+        if (node.match( /^\/\w/ )) indent = indent.substring(tab.length);
+        formatted += indent + '<' + node.replace(/>/g, '>\r\n');
+        if (node.match( /^<?\w[^>]*[^/]$/ ) && !node.startsWith("?")) indent += tab;
+    });
+    return formatted.substring(1, formatted.length - 3);
+  }
+
+  return (
+    <main className="container mx-auto p-4 md:p-8">
+      <header className="text-center mb-10">
+        <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary-dark mb-2">
+          XML Traveler's Pie
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Craft your travel XML with ease and a sprinkle of AI magic.
+        </p>
+      </header>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline">
+                <UploadCloud className="text-primary" />
+                1. Load Schema
+              </CardTitle>
+              <CardDescription>
+                Start by loading the traveler's XML schema. For this demo, we'll use a predefined schema.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleLoadSchema} disabled={isSchemaLoading || !!schemaContent}>
+                {schemaContent ? "Schema Loaded" : isSchemaLoading ? "Loading..." : "Load Traveler Schema"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {schemaContent && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-headline">2. Enter Data</CardTitle>
+                <CardDescription>
+                  Fill in the travel details. Use the magic wand for AI-powered suggestions!
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TravelerForm 
+                  schema={schemaContent} 
+                  onGenerateXml={handleGenerateXml} 
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-headline">
+              <FileCode className="text-primary" />
+              3. Generated XML
+            </CardTitle>
+            <CardDescription>
+              Your generated XML will appear here after you submit the form.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 h-96 overflow-auto">
+              <pre className="text-sm font-code whitespace-pre-wrap">{generatedXml || "<!-- XML output will be shown here -->"}</pre>
+            </div>
+            <Button onClick={handleDownloadXml} disabled={!generatedXml}>
+              <Download className="mr-2 h-4 w-4" />
+              Download XML
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
 }
