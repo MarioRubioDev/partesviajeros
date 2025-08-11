@@ -354,6 +354,3 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     </Form>
   );
 }
-
-    
-    
