@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useTransition } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -10,123 +10,133 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { getSuggestionAction } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
-const ViajeroSchema = z.object({
+const pagoSchema = z.object({
+    tipoPago: z.string().min(1, "El tipo de pago es obligatorio"),
+    fechaPago: z.date(),
+    medioPago: z.string().optional(),
+    titular: z.string().optional(),
+    caducidadTarjeta: z.string().optional().refine(val => !val || /^(0[1-9]|1[0-2])\/\d{4}$/.test(val), {
+        message: "Formato de caducidad debe ser mm/aaaa"
+    }),
+});
+
+const contratoSchema = z.object({
+    referencia: z.string().min(1, "La referencia es obligatoria"),
+    fechaContrato: z.date(),
+    fechaEntrada: z.date(),
+    fechaSalida: z.date(),
+    numPersonas: z.coerce.number().int().min(1, "Debe haber al menos una persona"),
+    numHabitaciones: z.coerce.number().int().min(0, "El número de habitaciones no puede ser negativo"),
+    internet: z.boolean(),
+    pago: pagoSchema
+});
+
+const direccionSchema = z.object({
+    direccion: z.string().min(1, "La dirección es obligatoria"),
+    direccionComplementaria: z.string().optional(),
+    codigoMunicipio: z.string().min(1, "El código de municipio es obligatorio"),
+    nombreMunicipio: z.string().optional(),
+    codigoPostal: z.string().min(1, "El código postal es obligatorio"),
+    pais: z.string().min(3, "El país es obligatorio (ISO alfa-3)"),
+});
+
+const personaSchema = z.object({
+  rol: z.string().min(1, "El rol es obligatorio."),
   nombre: z.string().min(2, "El nombre es obligatorio."),
   apellido1: z.string().min(2, "El primer apellido es obligatorio."),
   apellido2: z.string().optional(),
-  sexo: z.string({ required_error: "El sexo es obligatorio." }),
   tipoDocumento: z.string({ required_error: "El tipo de documento es obligatorio." }),
   numeroDocumento: z.string().min(3, "El número de documento es obligatorio."),
-  fechaExpedicionDocumento: z.date().optional(),
+  soporteDocumento: z.string().min(1, "El soporte del documento es obligatorio"),
   fechaNacimiento: z.date({ required_error: "La fecha de nacimiento es obligatoria." }),
-  paisNacionalidad: z.string().min(2, "El país es obligatorio."),
-  fechaEntrada: z.date({ required_error: "La fecha de entrada es obligatoria." }),
+  nacionalidad: z.string().min(3, "La nacionalidad es obligatoria (ISO alfa-3)"),
+  sexo: z.string({ required_error: "El sexo es obligatorio." }),
+  direccion: direccionSchema,
+  telefono: z.string().min(1, "El teléfono es obligatorio"),
+  telefono2: z.string().optional(),
+  correo: z.string().email("Debe ser un correo electrónico válido"),
+  parentesco: z.string().optional(),
 });
+
 
 export const TravelerFormSchema = z.object({
   codigoEstablecimiento: z.string().min(1, "El código de establecimiento es obligatorio."),
-  referencia: z.string().min(1, "La referencia es obligatoria."),
-  travelers: z.array(ViajeroSchema).min(1),
+  contrato: contratoSchema,
+  persona: personaSchema,
 });
 
 interface TravelerFormProps {
-  schema: string;
   onGenerateXml: (data: z.infer<typeof TravelerFormSchema>) => void;
 }
 
-interface SelectOption {
-  value: string;
-  label: string;
-}
-
-export default function TravelerForm({ schema, onGenerateXml }: TravelerFormProps) {
+export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-
-  const [documentTypes, setDocumentTypes] = useState<SelectOption[]>([]);
-  const [genders, setGenders] = useState<SelectOption[]>([]);
-
-  useEffect(() => {
-    fetch('/data/document_types.json')
-      .then(res => res.json())
-      .then(data => setDocumentTypes(data));
-    
-    fetch('/data/genders.json')
-      .then(res => res.json())
-      .then(data => setGenders(data));
-  }, []);
 
   const form = useForm<z.infer<typeof TravelerFormSchema>>({
     resolver: zodResolver(TravelerFormSchema),
     defaultValues: {
-      codigoEstablecimiento: "",
-      referencia: "",
-      travelers: [{
-        nombre: "",
-        apellido1: "",
-        apellido2: "",
-        numeroDocumento: "",
-        paisNacionalidad: ""
-      }],
+      codigoEstablecimiento: "0000000000",
+      contrato: {
+        referencia: "20250810-01",
+        fechaContrato: new Date(),
+        fechaEntrada: new Date(),
+        fechaSalida: new Date(new Date().setDate(new Date().getDate() + 3)),
+        numPersonas: 1,
+        numHabitaciones: 1,
+        internet: true,
+        pago: {
+            tipoPago: 'TARJT',
+            fechaPago: new Date(),
+            medioPago: '',
+            titular: '',
+            caducidadTarjeta: '',
+        }
+      },
+      persona: {
+        rol: "VI",
+        nombre: "lucas",
+        apellido1: "Martinez",
+        apellido2: "Ruiz",
+        tipoDocumento: "NIF",
+        numeroDocumento: "12345678T",
+        soporteDocumento: "CIQ119899",
+        fechaNacimiento: new Date("1996-02-29"),
+        nacionalidad: "ESP",
+        sexo: "H",
+        direccion: {
+            direccion: "Paseo de la castellana, 13",
+            direccionComplementaria: "",
+            codigoMunicipio: "45176",
+            nombreMunicipio: "",
+            codigoPostal: "45217",
+            pais: "ESP"
+        },
+        telefono: "666123456",
+        telefono2: "",
+        correo: "correo@correo.es",
+        parentesco: "",
+      },
     },
   });
-  
-  const { fields } = useFieldArray({
-    control: form.control,
-    name: "travelers",
-  });
-
-  const handleSuggestion = (fieldName: keyof z.infer<typeof ViajeroSchema>, fieldDescription: string) => {
-    startTransition(async () => {
-      try {
-        const currentData = form.getValues();
-        const traveler = currentData.travelers[0];
-        const existingData = `<parte>
-          <nombre>${traveler.nombre || ''}</nombre>
-          <apellido1>${traveler.apellido1 || ''}</apellido1>
-        </parte>`;
-
-        const result = await getSuggestionAction({
-          xmlSchema: schema,
-          existingData,
-          fieldDescription,
-        });
-
-        if (result.suggestion) {
-          form.setValue(`travelers.0.${fieldName}`, result.suggestion, { shouldValidate: true });
-          toast({
-            title: "¡Sugerencia aplicada!",
-            description: `Campo actualizado con la sugerencia de la IA.`,
-          });
-        } else {
-            throw new Error("Sugerencia vacía recibida.");
-        }
-      } catch (error) {
-        console.error("Falló la sugerencia:", error);
-        toast({
-          variant: "destructive",
-          title: "¡Uy! Algo salió mal.",
-          description: "No se pudo obtener una sugerencia de la IA.",
-        });
-      }
-    });
-  };
 
   const onSubmit = (data: z.infer<typeof TravelerFormSchema>) => {
-    onGenerateXml(data);
-    toast({
-      title: "¡XML Generado!",
-      description: "El parte de viajero se ha creado correctamente.",
+    startTransition(() => {
+        onGenerateXml(data);
+        toast({
+            title: "¡XML Generado!",
+            description: "La petición de alta de parte se ha creado correctamente.",
+        });
     });
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="codigoEstablecimiento"
@@ -140,194 +150,129 @@ export default function TravelerForm({ schema, onGenerateXml }: TravelerFormProp
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="referencia"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Referencia</FormLabel>
-              <FormControl>
-                <Input placeholder="Referencia del parte" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {fields.map((field, index) => (
-          <div key={field.id} className="space-y-4 border p-4 rounded-md">
-            <h3 className="font-medium">Viajero {index + 1}</h3>
-             <FormField
-                control={form.control}
-                name={`travelers.${index}.nombre`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input placeholder="e.g., Juan" {...field} />
-                      </FormControl>
-                       <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={() => handleSuggestion('nombre', 'Un nombre de pila común en España.')}
-                        disabled={isPending}
-                        aria-label="Obtener sugerencia de IA para el nombre"
-                      >
-                        <Sparkles className="h-4 w-4 text-accent" />
-                      </Button>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`travelers.${index}.apellido1`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primer Apellido</FormLabel>
-                     <div className="flex gap-2">
-                        <FormControl>
-                          <Input placeholder="e.g., Pérez" {...field} />
-                        </FormControl>
-                         <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={() => handleSuggestion('apellido1', 'Un apellido común en España.')}
-                          disabled={isPending}
-                          aria-label="Obtener sugerencia de IA para el primer apellido"
-                        >
-                          <Sparkles className="h-4 w-4 text-accent" />
-                        </Button>
-                      </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`travelers.${index}.apellido2`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Segundo Apellido (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Gómez" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`travelers.${index}.sexo`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sexo</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar sexo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {genders.map((g) => (
-                          <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name={`travelers.${index}.tipoDocumento`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Documento</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar tipo de documento" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {documentTypes.map((d) => (
-                          <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`travelers.${index}.numeroDocumento`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de Documento</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 12345678A" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name={`travelers.${index}.fechaExpedicionDocumento`}
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha Expedición Documento (Opcional)</FormLabel>
-                    <DatePicker field={field} />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`travelers.${index}.fechaNacimiento`}
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha de Nacimiento</FormLabel>
-                    <DatePicker field={field} />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name={`travelers.${index}.paisNacionalidad`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>País de Nacionalidad</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., España" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`travelers.${index}.fechaEntrada`}
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha de Entrada</FormLabel>
-                    <DatePicker field={field} />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-          </div>
-        ))}
         
-        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={isPending}>
-          Generar XML
+        <Separator />
+        <h3 className="text-lg font-semibold">Datos del Contrato</h3>
+        <div className="grid md:grid-cols-2 gap-4">
+            <FormField control={form.control} name="contrato.referencia" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Referencia</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.fechaContrato" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Fecha Contrato</FormLabel><DatePicker field={field} /><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.fechaEntrada" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Fecha Entrada</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.fechaSalida" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.numPersonas" render={({ field }) => (
+                <FormItem><FormLabel>Nº Personas</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.numHabitaciones" render={({ field }) => (
+                <FormItem><FormLabel>Nº Habitaciones</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.internet" render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm col-span-full"><div className="space-y-0.5"><FormLabel>Internet</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+            )} />
+        </div>
+
+        <Separator />
+        <h4 className="text-md font-semibold">Datos de Pago</h4>
+        <div className="grid md:grid-cols-2 gap-4">
+            <FormField control={form.control} name="contrato.pago.tipoPago" render={({ field }) => (
+                <FormItem><FormLabel>Tipo de Pago</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="DESTI">DESTI</SelectItem><SelectItem value="EFECT">EFECT</SelectItem><SelectItem value="TARJT">TARJT</SelectItem><SelectItem value="PLATF">PLATF</SelectItem><SelectItem value="TRANS">TRANS</SelectItem><SelectItem value="MOVIL">MOVIL</SelectItem><SelectItem value="TREG">TREG</SelectItem><SelectItem value="OTRO">OTRO</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.pago.fechaPago" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Fecha Pago</FormLabel><DatePicker field={field} /><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.pago.medioPago" render={({ field }) => (
+                <FormItem><FormLabel>Medio de Pago (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.pago.titular" render={({ field }) => (
+                <FormItem><FormLabel>Titular (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="contrato.pago.caducidadTarjeta" render={({ field }) => (
+                <FormItem><FormLabel>Caducidad Tarjeta (Opcional)</FormLabel><FormControl><Input placeholder="mm/aaaa" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+        </div>
+
+        <Separator />
+        <h3 className="text-lg font-semibold">Datos de la Persona</h3>
+        <div className="grid md:grid-cols-2 gap-4">
+             <FormField control={form.control} name="persona.rol" render={({ field }) => (
+                <FormItem><FormLabel>Rol</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="VI">Viajero</SelectItem><SelectItem value="CP">Contratante Principal</SelectItem><SelectItem value="CS">Contratante Secundario</SelectItem><SelectItem value="TI">Titular</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="persona.nombre" render={({ field }) => (
+                <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.apellido1" render={({ field }) => (
+                <FormItem><FormLabel>Primer Apellido</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.apellido2" render={({ field }) => (
+                <FormItem><FormLabel>Segundo Apellido (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.tipoDocumento" render={({ field }) => (
+                <FormItem><FormLabel>Tipo de Documento</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="NIF">NIF</SelectItem><SelectItem value="NIE">NIE</SelectItem><SelectItem value="PAS">PAS</SelectItem><SelectItem value="OTRO">OTRO</SelectItem><SelectItem value="CIF">CIF</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.numeroDocumento" render={({ field }) => (
+                <FormItem><FormLabel>Número Documento</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.soporteDocumento" render={({ field }) => (
+                <FormItem><FormLabel>Soporte Documento</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.fechaNacimiento" render={({ field }) => (
+                <FormItem className="flex flex-col"><FormLabel>Fecha de Nacimiento</FormLabel><DatePicker field={field} /><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.nacionalidad" render={({ field }) => (
+                <FormItem><FormLabel>Nacionalidad (ISO3)</FormLabel><FormControl><Input placeholder="ESP" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.sexo" render={({ field }) => (
+                 <FormItem><FormLabel>Sexo</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="H">Hombre</SelectItem><SelectItem value="M">Mujer</SelectItem><SelectItem value="O">Otro</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.telefono" render={({ field }) => (
+                <FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.telefono2" render={({ field }) => (
+                <FormItem><FormLabel>Teléfono 2 (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="persona.correo" render={({ field }) => (
+                <FormItem className="col-span-full"><FormLabel>Correo Electrónico</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="persona.parentesco" render={({ field }) => (
+                 <FormItem><FormLabel>Parentesco (Opcional)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Seleccionar parentesco" /></SelectTrigger></FormControl><SelectContent><SelectItem value="AB">Abuelo/a</SelectItem><SelectItem value="CY">Cónyuge</SelectItem><SelectItem value="HJ">Hijo/a</SelectItem><SelectItem value="HR">Hermano/a</SelectItem><SelectItem value="PM">Padre/Madre</SelectItem><SelectItem value="OT">Otro</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+            )} />
+        </div>
+
+        <Separator />
+        <h4 className="text-md font-semibold">Dirección de la Persona</h4>
+        <div className="grid md:grid-cols-2 gap-4">
+             <FormField control={form.control} name="persona.direccion.direccion" render={({ field }) => (
+                <FormItem className="col-span-full"><FormLabel>Dirección</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.direccion.direccionComplementaria" render={({ field }) => (
+                <FormItem className="col-span-full"><FormLabel>Dirección Complementaria (Opcional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="persona.direccion.codigoMunicipio" render={({ field }) => (
+                <FormItem><FormLabel>Código Municipio</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.direccion.nombreMunicipio" render={({ field }) => (
+                <FormItem><FormLabel>Nombre Municipio (si no es ESP)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.direccion.codigoPostal" render={({ field }) => (
+                <FormItem><FormLabel>Código Postal</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="persona.direccion.pais" render={({ field }) => (
+                <FormItem><FormLabel>País (ISO3)</FormLabel><FormControl><Input placeholder="ESP" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+        </div>
+        
+        <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full" disabled={isPending}>
+          Generar XML de Petición
         </Button>
       </form>
     </Form>

@@ -5,53 +5,64 @@ import { useState } from "react";
 import type { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileCode, Download, UploadCloud } from "lucide-react";
+import { FileCode, Download, Hotel } from "lucide-react";
 import TravelerForm from "@/components/traveler-form";
 import type { TravelerFormSchema } from "@/components/traveler-form";
 
 export default function Home() {
-  const [schemaContent, setSchemaContent] = useState<string | null>(null);
-  const [isSchemaLoading, setIsSchemaLoading] = useState(false);
   const [generatedXml, setGeneratedXml] = useState<string | null>(null);
 
-  const handleLoadSchema = async () => {
-    setIsSchemaLoading(true);
-    try {
-      const response = await fetch("/schemas/parte_viajeros.xsd");
-      const text = await response.text();
-      setSchemaContent(text);
-    } catch (error) {
-      console.error("Failed to load schema:", error);
-      // Here you might want to show a toast notification
-    } finally {
-      setIsSchemaLoading(false);
-    }
-  };
-
   const handleGenerateXml = (data: z.infer<typeof TravelerFormSchema>) => {
-    const traveler = data.travelers[0];
+    const { contrato, persona } = data;
     const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
-<parte xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="parte_viajeros.xsd">
-  <codigoEstablecimiento>${data.codigoEstablecimiento}</codigoEstablecimiento>
-  <referencia>${data.referencia}</referencia>
-  <viajeros>
-    <viajero>
-      <orden>1</orden>
-      <nombre>${traveler.nombre}</nombre>
-      <apellido1>${traveler.apellido1}</apellido1>
-      ${traveler.apellido2 ? `<apellido2>${traveler.apellido2}</apellido2>` : ""}
-      <sexo>${traveler.sexo}</sexo>
-      <tipoDocumento>${traveler.tipoDocumento}</tipoDocumento>
-      <numeroDocumento>${traveler.numeroDocumento}</numeroDocumento>
-      ${traveler.fechaExpedicionDocumento ? `<fechaExpedicionDocumento>${traveler.fechaExpedicionDocumento.toISOString().split('T')[0]}</fechaExpedicionDocumento>` : ""}
-      <fechaNacimiento>${traveler.fechaNacimiento.toISOString().split('T')[0]}</fechaNacimiento>
-      <paisNacionalidad>${traveler.paisNacionalidad}</paisNacionalidad>
-      <fechaEntrada>${traveler.fechaEntrada.toISOString().split('T')[0]}</fechaEntrada>
-    </viajero>
-  </viajeros>
-</parte>`;
+<ns2:peticion xmlns:ns2="http://www.neg.hospedajes.mir.es/altaParteHospedaje">
+  <solicitud>
+    <codigoEstablecimiento>${data.codigoEstablecimiento}</codigoEstablecimiento>
+    <comunicacion>
+      <contrato>
+        <referencia>${contrato.referencia}</referencia>
+        <fechaContrato>${contrato.fechaContrato.toISOString().split('T')[0]}</fechaContrato>
+        <fechaEntrada>${contrato.fechaEntrada.toISOString().split('Z')[0]}</fechaEntrada>
+        <fechaSalida>${contrato.fechaSalida.toISOString().split('Z')[0]}</fechaSalida>
+        <numPersonas>${contrato.numPersonas}</numPersonas>
+        <numHabitaciones>${contrato.numHabitaciones}</numHabitaciones>
+        <internet>${contrato.internet}</internet>
+        <pago>
+          <tipoPago>${contrato.pago.tipoPago}</tipoPago>
+          <fechaPago>${contrato.pago.fechaPago.toISOString().split('T')[0]}</fechaPago>
+          ${contrato.pago.medioPago ? `<medioPago>${contrato.pago.medioPago}</medioPago>` : '<medioPago></medioPago>'}
+          ${contrato.pago.titular ? `<titular>${contrato.pago.titular}</titular>` : '<titular></titular>'}
+          ${contrato.pago.caducidadTarjeta ? `<caducidadTarjeta>${contrato.pago.caducidadTarjeta}</caducidadTarjeta>` : '<caducidadTarjeta></caducidadTarjeta>'}
+        </pago>
+      </contrato>
+      <persona>
+        <rol>${persona.rol}</rol>
+        <nombre>${persona.nombre}</nombre>
+        <apellido1>${persona.apellido1}</apellido1>
+        ${persona.apellido2 ? `<apellido2>${persona.apellido2}</apellido2>` : ''}
+        <tipoDocumento>${persona.tipoDocumento}</tipoDocumento>
+        <numeroDocumento>${persona.numeroDocumento}</numeroDocumento>
+        <soporteDocumento>${persona.soporteDocumento}</soporteDocumento>
+        <fechaNacimiento>${persona.fechaNacimiento.toISOString().split('T')[0]}</fechaNacimiento>
+        <nacionalidad>${persona.nacionalidad}</nacionalidad>
+        <sexo>${persona.sexo}</sexo>
+        <direccion>
+          <direccion>${persona.direccion.direccion}</direccion>
+          ${persona.direccion.direccionComplementaria ? `<direccionComplementaria>${persona.direccion.direccionComplementaria}</direccionComplementaria>` : '<direccionComplementaria></direccionComplementaria>'}
+          <codigoMunicipio>${persona.direccion.codigoMunicipio}</codigoMunicipio>
+          ${persona.direccion.nombreMunicipio ? `<nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>` : '<nombreMunicipio></nombreMunicipio>'}
+          <codigoPostal>${persona.direccion.codigoPostal}</codigoPostal>
+          <pais>${persona.direccion.pais}</pais>
+        </direccion>
+        <telefono>${persona.telefono}</telefono>
+        ${persona.telefono2 ? `<telefono2>${persona.telefono2}</telefono2>` : '<telefono2></telefono2>'}
+        <correo>${persona.correo}</correo>
+        ${persona.parentesco ? `<parentesco>${persona.parentesco}</parentesco>` : '<parentesco></parentesco>'}
+      </persona>
+    </comunicacion>
+  </solicitud>
+</ns2:peticion>`;
     
-    // Pretty print the XML for display
     const formattedXml = formatXml(xmlString);
     setGeneratedXml(formattedXml);
   };
@@ -62,7 +73,7 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "parte-viajeros.xml";
+    a.download = "peticion-hospedaje.xml";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -74,7 +85,11 @@ export default function Home() {
     const tab = '  ';
     xml.split(/>\s*</).forEach(function(node) {
         if (node.match( /^\/\w/ )) indent = indent.substring(tab.length);
-        formatted += indent + '<' + node.replace(/>/g, '>\r\n');
+        if (node.startsWith('ns2:')) {
+           formatted += indent + '<' + node.replace(/>/g, '>\r\n');
+        } else {
+           formatted += indent + '<' + node.replace(/>/g, '>\r\n');
+        }
         if (node.match( /^<?\w[^>]*[^/]$/ ) && !node.startsWith("?")) indent += tab;
     });
     return formatted.substring(1, formatted.length - 3);
@@ -87,59 +102,40 @@ export default function Home() {
           XML Traveler's Pie
         </h1>
         <p className="text-lg text-muted-foreground">
-          Generador de partes de entrada de viajeros.
+          Generador de partes de entrada de viajeros para hospedajes.
         </p>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-8">
-          <Card>
+      <div className="grid gap-8 lg:grid-cols-5">
+        <div className="space-y-8 lg:col-span-3">
+           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline">
-                <UploadCloud className="text-primary" />
-                1. Cargar Esquema
+                <Hotel className="text-primary" />
+                Datos del Parte de Viajero
               </CardTitle>
               <CardDescription>
-                Para comenzar, cargue el esquema XML de parte de viajeros.
+                Rellene todos los campos para generar el XML de la petición.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={handleLoadSchema} disabled={isSchemaLoading || !!schemaContent}>
-                {schemaContent ? "Esquema Cargado" : isSchemaLoading ? "Cargando..." : "Cargar Esquema de Parte de Viajeros"}
-              </Button>
+              <TravelerForm onGenerateXml={handleGenerateXml} />
             </CardContent>
           </Card>
-
-          {schemaContent && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-headline">2. Introducir Datos del Viajero</CardTitle>
-                <CardDescription>
-                  Rellene los datos del parte de viajero. ¡Usa la varita mágica para obtener sugerencias de la IA!
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TravelerForm 
-                  schema={schemaContent} 
-                  onGenerateXml={handleGenerateXml} 
-                />
-              </CardContent>
-            </Card>
-          )}
         </div>
 
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <FileCode className="text-primary" />
-              3. XML Generado
+              XML Generado
             </CardTitle>
             <CardDescription>
               El XML generado aparecerá aquí una vez envíe el formulario.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 h-96 overflow-auto">
+            <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 h-[600px] overflow-auto">
               <pre className="text-sm font-code whitespace-pre-wrap">{generatedXml || "<!-- La salida XML se mostrará aquí -->"}</pre>
             </div>
             <Button onClick={handleDownloadXml} disabled={!generatedXml}>
