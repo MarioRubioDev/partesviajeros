@@ -2,7 +2,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -193,7 +193,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormItem className="flex flex-col"><FormLabel>Fecha Entrada</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="contrato.fechaSalida" render={({ field }) => (
-                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormItem>
+                <FormItem className="flex flex-col"><FormLabel>Fecha Salida</FormLabel><DatePicker field={field} showTime /><FormMessage /></FormMessage>
             )} />
             <FormField control={form.control} name="contrato.numPersonas" render={({ field }) => (
                 <FormItem><FormLabel>Nº Personas</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
@@ -337,6 +337,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                             // Reset municipality fields when country changes
                             form.setValue("persona.direccion.codigoMunicipio", "");
                             form.setValue("persona.direccion.nombreMunicipio", "");
+                            form.setValue("persona.direccion.codigoPostal", "");
                         }} 
                         defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
@@ -354,4 +355,5 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   );
 }
 
+    
     
