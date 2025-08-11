@@ -41,7 +41,7 @@ const contratoSchema = z.object({
 const direccionSchema = z.object({
     direccion: z.string().min(1, "La dirección es obligatoria"),
     direccionComplementaria: z.string().optional(),
-    codigoMunicipio: z.string().min(5, "El código de municipio es obligatorio").max(5),
+    codigoMunicipio: z.string().min(1, "El código de municipio es obligatorio"),
     nombreMunicipio: z.string().optional(),
     codigoPostal: z.string().min(1, "El código postal es obligatorio"),
     pais: z.string().min(3, "El país es obligatorio (ISO alfa-3)"),
@@ -345,3 +345,5 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     </Form>
   );
 }
+
+    
