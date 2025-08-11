@@ -1,16 +1,13 @@
 
 "use client";
 
-import { useState } from "react";
 import type { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileCode, Hotel } from "lucide-react";
+import { Hotel } from "lucide-react";
 import TravelerForm from "@/components/traveler-form";
 import type { TravelerFormSchema } from "@/components/traveler-form";
 
 export default function Home() {
-  const [generatedXml, setGeneratedXml] = useState<string | null>(null);
-
   function formatXml(xml: string) {
     let formatted = '', indent = '';
     const tab = '  ';
@@ -78,7 +75,6 @@ export default function Home() {
 </ns2:peticion>`;
     
     const formattedXml = formatXml(xmlString);
-    setGeneratedXml(formattedXml);
 
     const blob = new Blob([formattedXml], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
@@ -102,8 +98,8 @@ export default function Home() {
         </p>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-5">
-        <div className="space-y-8 lg:col-span-3">
+      <div className="flex justify-center">
+        <div className="w-full lg:w-4/5">
            <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline">
@@ -119,23 +115,6 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
-
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <FileCode className="text-primary" />
-              XML Generado
-            </CardTitle>
-            <CardDescription>
-              El XML generado aparecerá aquí una vez envíe el formulario.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 h-[600px] overflow-auto">
-              <pre className="text-sm font-code whitespace-pre-wrap">{generatedXml || "<!-- La salida XML se mostrará aquí -->"}</pre>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </main>
   );
