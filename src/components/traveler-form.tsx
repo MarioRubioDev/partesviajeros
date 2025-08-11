@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import paises from "@/lib/data/paises.json";
 
 const pagoSchema = z.object({
     tipoPago: z.string().min(1, "El tipo de pago es obligatorio"),
@@ -241,7 +242,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormItem className="flex flex-col"><FormLabel>Fecha de Nacimiento</FormLabel><DatePicker field={field} /><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="persona.nacionalidad" render={({ field }) => (
-                <FormItem><FormLabel>Nacionalidad (ISO3)</FormLabel><FormControl><Input placeholder="ESP" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Nacionalidad (ISO3)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{paises.map(p => <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="persona.sexo" render={({ field }) => (
                  <FormItem><FormLabel>Sexo</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="H">Hombre</SelectItem><SelectItem value="M">Mujer</SelectItem><SelectItem value="O">Otro</SelectItem></SelectContent></Select><FormMessage /></FormItem>
@@ -279,7 +280,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormItem><FormLabel>Código Postal</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="persona.direccion.pais" render={({ field }) => (
-                <FormItem><FormLabel>País (ISO3)</FormLabel><FormControl><Input placeholder="ESP" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>País (ISO3)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent>{paises.map(p => <SelectItem key={p.code} value={p.code}>{p.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
             )} />
         </div>
         
