@@ -70,6 +70,14 @@ export const TravelerFormSchema = z.object({
   codigoEstablecimiento: z.string().min(1, "El código de establecimiento es obligatorio."),
   contrato: contratoSchema,
   persona: personaSchema,
+}).refine(data => {
+    if (data.persona.direccion.pais !== 'ESP') {
+        return !!data.persona.direccion.nombreMunicipio;
+    }
+    return true;
+}, {
+    message: "El nombre del municipio es obligatorio si el país no es España.",
+    path: ["persona", "direccion", "nombreMunicipio"],
 });
 
 interface TravelerFormProps {
