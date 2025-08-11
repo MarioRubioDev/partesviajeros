@@ -60,7 +60,7 @@ const contratoSchema = z.object({
 const direccionSchema = z.object({
   direccion: z.string().min(1, "La dirección es obligatoria"),
   direccionComplementaria: z.string().optional(),
-  codigoMunicipio: z.string().min(1, "El código de municipio es obligatorio"),
+  codigoMunicipio: z.string().optional(),
   nombreMunicipio: z.string().min(1, "El nombre del municipio es obligatorio"),
   codigoPostal: z.string().min(1, "El código postal es obligatorio"),
   pais: z.string().min(3, "El país es obligatorio (ISO alfa-3)"),
@@ -171,6 +171,9 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     },
   });
 
+  const paisSeleccionado = form.watch("persona.direccion.pais");
+  const provinciaSeleccionada = form.watch("persona.direccion.provincia");
+
   useEffect(() => {
     const savedCodigo = localStorage.getItem("codigoEstablecimiento");
     if (savedCodigo) {
@@ -178,15 +181,13 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     }
   }, [form]);
 
-  const paisSeleccionado = form.watch("persona.direccion.pais");
-  const provinciaSeleccionada = form.watch("persona.direccion.provincia");
 
   useEffect(() => {
       if (paisSeleccionado !== 'ESP') {
           form.resetField("persona.direccion.provincia");
+          form.resetField("persona.direccion.codigoMunicipio")
           setMunicipios([]);
       }
-      form.resetField("persona.direccion.codigoMunicipio");
       form.resetField("persona.direccion.nombreMunicipio");
   }, [paisSeleccionado, form]);
 
@@ -768,9 +769,23 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 </FormItem>
                 )}
             />
+            <FormField
+            control={form.control}
+            name="persona.direccion.codigoMunicipio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código Municipio</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ej. 28079" {...field} readOnly />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           </>
         )}
         {paisSeleccionado !== 'ESP' && (
+            <>
              <FormField
                 control={form.control}
                 name="persona.direccion.nombreMunicipio"
@@ -784,20 +799,9 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 </FormItem>
                 )}
             />
+            </>
         )}
-          <FormField
-            control={form.control}
-            name="persona.direccion.codigoMunicipio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Código Municipio</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ej. 28079" {...field} readOnly={paisSeleccionado === 'ESP'} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+
           <FormField
             control={form.control}
             name="persona.direccion.codigoPostal"
@@ -811,7 +815,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               </FormItem>
             )}
           />
-          
+
         </div>
 
         <Button
@@ -825,5 +829,3 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     </Form>
   );
 }
-
-    

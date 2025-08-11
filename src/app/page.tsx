@@ -25,6 +25,20 @@ export default function Home() {
 
   const handleGenerateAndDownloadXml = (data: z.infer<typeof TravelerFormSchema>) => {
     const { contrato, persona } = data;
+    const direccionXml = persona.direccion.pais === 'ESP'
+      ? `
+          <codigoMunicipio>${persona.direccion.codigoMunicipio}</codigoMunicipio>
+          <nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>
+          <codigoPostal>${persona.direccion.codigoPostal}</codigoPostal>
+          <pais>${persona.direccion.pais}</pais>
+        `
+      : `
+          <codigoMunicipio></codigoMunicipio>
+          <nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>
+          <codigoPostal>${persona.direccion.codigoPostal}</codigoPostal>
+          <pais>${persona.direccion.pais}</pais>
+        `;
+
     const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
 <ns2:peticion xmlns:ns2="http://www.neg.hospedajes.mir.es/altaParteHospedaje">
   <solicitud>
@@ -60,10 +74,7 @@ export default function Home() {
         <direccion>
           <direccion>${persona.direccion.direccion}</direccion>
           ${persona.direccion.direccionComplementaria ? `<direccionComplementaria>${persona.direccion.direccionComplementaria}</direccionComplementaria>` : '<direccionComplementaria></direccionComplementaria>'}
-          <codigoMunicipio>${persona.direccion.codigoMunicipio}</codigoMunicipio>
-          <nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>
-          <codigoPostal>${persona.direccion.codigoPostal}</codigoPostal>
-          <pais>${persona.direccion.pais}</pais>
+          ${direccionXml.trim()}
         </direccion>
         <telefono>${persona.telefono}</telefono>
         ${persona.telefono2 ? `<telefono2>${persona.telefono2}</telefono2>` : '<telefono2></telefono2>'}
@@ -117,5 +128,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
