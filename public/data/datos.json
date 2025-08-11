@@ -1,7 +1,0 @@
-
-[
-  { "value": "plane", "label": "Airplane" },
-  { "value": "train", "label": "Train" },
-  { "value": "car", "label": "Car" },
-  { "value": "ship", "label": "Ship" }
-]
