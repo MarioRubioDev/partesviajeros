@@ -17,7 +17,7 @@ export default function Home() {
   const handleLoadSchema = async () => {
     setIsSchemaLoading(true);
     try {
-      const response = await fetch("/schemas/traveler_schema.xsd");
+      const response = await fetch("/schemas/parte_viajeros.xsd");
       const text = await response.text();
       setSchemaContent(text);
     } catch (error) {
@@ -29,15 +29,27 @@ export default function Home() {
   };
 
   const handleGenerateXml = (data: z.infer<typeof TravelerFormSchema>) => {
+    const traveler = data.travelers[0];
     const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
-<travelerPie xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="traveler_schema.xsd">
-  <travelerName>${data.travelerName}</travelerName>
-  <destination>${data.destination}</destination>
-  <departureDate>${data.departureDate.toISOString().split('T')[0]}</departureDate>
-  <travelPurpose>${data.travelPurpose}</travelPurpose>
-  <transportMode>${data.transportMode}</transportMode>
-  ${data.notes ? `<notes>${data.notes}</notes>` : ""}
-</travelerPie>`;
+<parte xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="parte_viajeros.xsd">
+  <codigoEstablecimiento>${data.codigoEstablecimiento}</codigoEstablecimiento>
+  <referencia>${data.referencia}</referencia>
+  <viajeros>
+    <viajero>
+      <orden>1</orden>
+      <nombre>${traveler.nombre}</nombre>
+      <apellido1>${traveler.apellido1}</apellido1>
+      ${traveler.apellido2 ? `<apellido2>${traveler.apellido2}</apellido2>` : ""}
+      <sexo>${traveler.sexo}</sexo>
+      <tipoDocumento>${traveler.tipoDocumento}</tipoDocumento>
+      <numeroDocumento>${traveler.numeroDocumento}</numeroDocumento>
+      ${traveler.fechaExpedicionDocumento ? `<fechaExpedicionDocumento>${traveler.fechaExpedicionDocumento.toISOString().split('T')[0]}</fechaExpedicionDocumento>` : ""}
+      <fechaNacimiento>${traveler.fechaNacimiento.toISOString().split('T')[0]}</fechaNacimiento>
+      <paisNacionalidad>${traveler.paisNacionalidad}</paisNacionalidad>
+      <fechaEntrada>${traveler.fechaEntrada.toISOString().split('T')[0]}</fechaEntrada>
+    </viajero>
+  </viajeros>
+</parte>`;
     
     // Pretty print the XML for display
     const formattedXml = formatXml(xmlString);
@@ -50,7 +62,7 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "traveler-pie.xml";
+    a.download = "parte-viajeros.xml";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -75,7 +87,7 @@ export default function Home() {
           XML Traveler's Pie
         </h1>
         <p className="text-lg text-muted-foreground">
-          Craft your travel XML with ease and a sprinkle of AI magic.
+          Generador de partes de entrada de viajeros.
         </p>
       </header>
 
@@ -85,15 +97,15 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline">
                 <UploadCloud className="text-primary" />
-                1. Load Schema
+                1. Cargar Esquema
               </CardTitle>
               <CardDescription>
-                Start by loading the traveler's XML schema. For this demo, we'll use a predefined schema.
+                Para comenzar, cargue el esquema XML de parte de viajeros.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={handleLoadSchema} disabled={isSchemaLoading || !!schemaContent}>
-                {schemaContent ? "Schema Loaded" : isSchemaLoading ? "Loading..." : "Load Traveler Schema"}
+                {schemaContent ? "Esquema Cargado" : isSchemaLoading ? "Cargando..." : "Cargar Esquema de Parte de Viajeros"}
               </Button>
             </CardContent>
           </Card>
@@ -101,9 +113,9 @@ export default function Home() {
           {schemaContent && (
             <Card>
               <CardHeader>
-                <CardTitle className="font-headline">2. Enter Data</CardTitle>
+                <CardTitle className="font-headline">2. Introducir Datos del Viajero</CardTitle>
                 <CardDescription>
-                  Fill in the travel details. Use the magic wand for AI-powered suggestions!
+                  Rellene los datos del parte de viajero. ¡Usa la varita mágica para obtener sugerencias de la IA!
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -120,19 +132,19 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline">
               <FileCode className="text-primary" />
-              3. Generated XML
+              3. XML Generado
             </CardTitle>
             <CardDescription>
-              Your generated XML will appear here after you submit the form.
+              El XML generado aparecerá aquí una vez envíe el formulario.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 h-96 overflow-auto">
-              <pre className="text-sm font-code whitespace-pre-wrap">{generatedXml || "<!-- XML output will be shown here -->"}</pre>
+              <pre className="text-sm font-code whitespace-pre-wrap">{generatedXml || "<!-- La salida XML se mostrará aquí -->"}</pre>
             </div>
             <Button onClick={handleDownloadXml} disabled={!generatedXml}>
               <Download className="mr-2 h-4 w-4" />
-              Download XML
+              Descargar XML
             </Button>
           </CardContent>
         </Card>

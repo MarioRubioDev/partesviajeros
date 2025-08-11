@@ -1,0 +1,8 @@
+[
+  { "value": "D", "label": "D.N.I." },
+  { "value": "P", "label": "Pasaporte" },
+  { "value": "C", "label": "Permiso de Conducir" },
+  { "value": "I", "label": "Tarjeta de Identidad Extranjero" },
+  { "value": "N", "label": "Permiso de Residencia (UE)" },
+  { "value": "X", "label": "Permiso de Residencia (Extracomunitario)" }
+]

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="parte">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="codigoEstablecimiento" type="xs:string"/>
+        <xs:element name="referencia" type="xs:string"/>
+        <xs:element name="viajeros">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="viajero" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="orden" type="xs:positiveInteger"/>
+                    <xs:element name="nombre" type="xs:string"/>
+                    <xs:element name="apellido1" type="xs:string"/>
+                    <xs:element name="apellido2" type="xs:string" minOccurs="0"/>
+                    <xs:element name="sexo">
+                      <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                          <xs:enumeration value="M"/>
+                          <xs:enumeration value="F"/>
+                        </xs:restriction>
+                      </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="tipoDocumento">
+                      <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                          <xs:enumeration value="D"/> <!-- DNI -->
+                          <xs:enumeration value="P"/> <!-- Pasaporte -->
+                          <xs:enumeration value="C"/> <!-- Permiso de conducir -->
+                          <xs:enumeration value="I"/> <!-- Tarjeta identidad extranjero -->
+                          <xs:enumeration value="N"/> <!-- Permiso residencia UE -->
+                          <xs:enumeration value="X"/> <!-- Permiso residencia extracomunitario -->
+                        </xs:restriction>
+                      </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="numeroDocumento" type="xs:string"/>
+                    <xs:element name="fechaExpedicionDocumento" type="xs:date" minOccurs="0"/>
+                    <xs:element name="fechaNacimiento" type="xs:date"/>
+                    <xs:element name="paisNacionalidad" type="xs:string"/>
+                    <xs:element name="fechaEntrada" type="xs:date"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
