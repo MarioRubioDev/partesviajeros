@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import paises from "@/lib/data/paises.json";
 import municipios from "@/lib/data/municipios.json";
+import provincias from "@/lib/data/provincias.json";
 
 const pagoSchema = z.object({
   tipoPago: z.string().min(1, "El tipo de pago es obligatorio"),
@@ -63,6 +64,7 @@ const direccionSchema = z.object({
   nombreMunicipio: z.string().min(1, "El nombre del municipio es obligatorio"),
   codigoPostal: z.string().min(1, "El código postal es obligatorio"),
   pais: z.string().min(3, "El país es obligatorio (ISO alfa-3)"),
+  provincia: z.string().optional(),
 });
 
 const personaSchema = z.object({
@@ -158,6 +160,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
           nombreMunicipio: "",
           codigoPostal: "",
           pais: "ESP",
+          provincia: "",
         },
         telefono: "",
         telefono2: "",
@@ -177,6 +180,9 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const paisSeleccionado = form.watch("persona.direccion.pais");
 
   useEffect(() => {
+      if (paisSeleccionado !== 'ESP') {
+          form.resetField("persona.direccion.provincia");
+      }
       form.resetField("persona.direccion.codigoMunicipio");
       form.resetField("persona.direccion.nombreMunicipio");
   }, [paisSeleccionado, form]);
@@ -659,6 +665,62 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="persona.direccion.pais"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>País (ISO3)</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {paises.map((p) => (
+                      <SelectItem key={p.code} value={p.code}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        {paisSeleccionado === 'ESP' && (
+          <FormField
+            control={form.control}
+            name="persona.direccion.provincia"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Provincia</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar provincia" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {provincias.map((p) => (
+                      <SelectItem key={p.codigo} value={p.codigo}>
+                        {p.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
            <FormField
             control={form.control}
             name="persona.direccion.nombreMunicipio"
@@ -698,33 +760,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="persona.direccion.pais"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>País (ISO3)</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {paises.map((p) => (
-                      <SelectItem key={p.code} value={p.code}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          
         </div>
 
         <Button
