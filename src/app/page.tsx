@@ -4,15 +4,29 @@
 import { useState } from "react";
 import type { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileCode, Download, Hotel } from "lucide-react";
+import { FileCode, Hotel } from "lucide-react";
 import TravelerForm from "@/components/traveler-form";
 import type { TravelerFormSchema } from "@/components/traveler-form";
 
 export default function Home() {
   const [generatedXml, setGeneratedXml] = useState<string | null>(null);
 
-  const handleGenerateXml = (data: z.infer<typeof TravelerFormSchema>) => {
+  function formatXml(xml: string) {
+    let formatted = '', indent = '';
+    const tab = '  ';
+    xml.split(/>\s*</).forEach(function(node) {
+        if (node.match( /^\/\w/ )) indent = indent.substring(tab.length);
+        if (node.startsWith('ns2:')) {
+           formatted += indent + '<' + node.replace(/>/g, '>\r\n');
+        } else {
+           formatted += indent + '<' + node.replace(/>/g, '>\r\n');
+        }
+        if (node.match( /^<?\w[^>]*[^/]$/ ) && !node.startsWith("?")) indent += tab;
+    });
+    return formatted.substring(1, formatted.length - 3);
+  }
+
+  const handleGenerateAndDownloadXml = (data: z.infer<typeof TravelerFormSchema>) => {
     const { contrato, persona } = data;
     const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
 <ns2:peticion xmlns:ns2="http://www.neg.hospedajes.mir.es/altaParteHospedaje">
@@ -22,8 +36,8 @@ export default function Home() {
       <contrato>
         <referencia>${contrato.referencia}</referencia>
         <fechaContrato>${contrato.fechaContrato.toISOString().split('T')[0]}</fechaContrato>
-        <fechaEntrada>${contrato.fechaEntrada.toISOString().split('Z')[0]}</fechaEntrada>
-        <fechaSalida>${contrato.fechaSalida.toISOString().split('Z')[0]}</fechaSalida>
+        <fechaEntrada>${contrato.fechaEntrada.toISOString().split('.')[0]}</fechaEntrada>
+        <fechaSalida>${contrato.fechaSalida.toISOString().split('.')[0]}</fechaSalida>
         <numPersonas>${contrato.numPersonas}</numPersonas>
         <numHabitaciones>${contrato.numHabitaciones}</numHabitaciones>
         <internet>${contrato.internet}</internet>
@@ -65,35 +79,17 @@ export default function Home() {
     
     const formattedXml = formatXml(xmlString);
     setGeneratedXml(formattedXml);
-  };
 
-  const handleDownloadXml = () => {
-    if (!generatedXml) return;
-    const blob = new Blob([generatedXml], { type: "application/xml" });
+    const blob = new Blob([formattedXml], { type: "application/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "peticion-hospedaje.xml";
+    a.download = `${contrato.referencia}.xml`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-
-  function formatXml(xml: string) {
-    let formatted = '', indent = '';
-    const tab = '  ';
-    xml.split(/>\s*</).forEach(function(node) {
-        if (node.match( /^\/\w/ )) indent = indent.substring(tab.length);
-        if (node.startsWith('ns2:')) {
-           formatted += indent + '<' + node.replace(/>/g, '>\r\n');
-        } else {
-           formatted += indent + '<' + node.replace(/>/g, '>\r\n');
-        }
-        if (node.match( /^<?\w[^>]*[^/]$/ ) && !node.startsWith("?")) indent += tab;
-    });
-    return formatted.substring(1, formatted.length - 3);
-  }
 
   return (
     <main className="container mx-auto p-4 md:p-8">
@@ -119,7 +115,7 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <TravelerForm onGenerateXml={handleGenerateXml} />
+              <TravelerForm onGenerateXml={handleGenerateAndDownloadXml} />
             </CardContent>
           </Card>
         </div>
@@ -138,10 +134,6 @@ export default function Home() {
             <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 h-[600px] overflow-auto">
               <pre className="text-sm font-code whitespace-pre-wrap">{generatedXml || "<!-- La salida XML se mostrará aquí -->"}</pre>
             </div>
-            <Button onClick={handleDownloadXml} disabled={!generatedXml}>
-              <Download className="mr-2 h-4 w-4" />
-              Descargar XML
-            </Button>
           </CardContent>
         </Card>
       </div>

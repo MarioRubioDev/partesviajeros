@@ -2,7 +2,8 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { format, parse } from "date-fns"
+import { es } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 import type { ControllerRenderProps } from "react-hook-form"
 import { cn } from "@/lib/utils"
@@ -17,63 +18,64 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ field, showTime = false }: DatePickerProps) {
-  const [date, setDate] = React.useState<Date | undefined>(field.value);
-  const [time, setTime] = React.useState(field.value ? format(field.value, 'HH:mm') : "00:00");
+  const formatString = showTime ? "PPP HH:mm" : "PPP";
+  const [dateString, setDateString] = React.useState(field.value ? format(field.value, formatString, { locale: es }) : "");
 
   const handleDateChange = (selectedDate: Date | undefined) => {
-    if (!selectedDate) {
-      field.onChange(undefined);
-      setDate(undefined);
-      return;
-    }
-    const [hours, minutes] = time.split(':').map(Number);
-    const newDate = new Date(selectedDate);
-    newDate.setHours(hours);
-    newDate.setMinutes(minutes);
-    setDate(newDate);
-    field.onChange(newDate);
-  }
-  
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTime(e.target.value);
-    if(date) {
-        const [hours, minutes] = e.target.value.split(':').map(Number);
-        const newDate = new Date(date);
-        newDate.setHours(hours);
-        newDate.setMinutes(minutes);
-        setDate(newDate);
-        field.onChange(newDate);
+    if (selectedDate) {
+      field.onChange(selectedDate);
+      setDateString(format(selectedDate, formatString, { locale: es }));
     }
   }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateString(e.target.value);
+    try {
+      const parsedDate = parse(e.target.value, formatString, new Date());
+      if (!isNaN(parsedDate.getTime())) {
+          field.onChange(parsedDate);
+      }
+    } catch(error) {
+      // Ignore invalid date formats while typing
+    }
+  }
+
+  React.useEffect(() => {
+    if (field.value) {
+      setDateString(format(field.value, formatString, { locale: es }));
+    }
+  }, [field.value, formatString]);
 
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !field.value && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {field.value ? format(field.value, showTime ? "PPP HH:mm" : "PPP") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={handleDateChange}
-          initialFocus
-        />
-        {showTime && (
-            <div className="p-2 border-t">
-                <Input type="time" value={time} onChange={handleTimeChange} />
-            </div>
-        )}
-      </PopoverContent>
-    </Popover>
+    <div className="flex gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-12 justify-center text-left font-normal p-0",
+              !field.value && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={field.value}
+            onSelect={handleDateChange}
+            initialFocus
+            locale={es}
+          />
+        </PopoverContent>
+      </Popover>
+      <Input 
+        value={dateString}
+        onChange={handleInputChange}
+        placeholder={showTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy"}
+      />
+    </div>
   )
 }

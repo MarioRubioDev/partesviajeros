@@ -51,7 +51,7 @@ const personaSchema = z.object({
   apellido2: z.string().optional(),
   tipoDocumento: z.string({ required_error: "El tipo de documento es obligatorio." }),
   numeroDocumento: z.string().min(3, "El número de documento es obligatorio."),
-  soporteDocumento: z.string().min(1, "El soporte del documento es obligatorio"),
+  soporteDocumento: z.string().regex(/^[a-zA-Z]{3}\d{6}$/, "El soporte debe tener 3 letras y 6 números."),
   fechaNacimiento: z.date({ required_error: "La fecha de nacimiento es obligatoria." }),
   nacionalidad: z.string().min(3, "La nacionalidad es obligatoria (ISO alfa-3)"),
   sexo: z.string({ required_error: "El sexo es obligatorio." }),
@@ -73,6 +73,14 @@ interface TravelerFormProps {
   onGenerateXml: (data: z.infer<typeof TravelerFormSchema>) => void;
 }
 
+const getDefaultFechaSalida = () => {
+    const fechaSalida = new Date();
+    fechaSalida.setDate(fechaSalida.getDate() + 3);
+    fechaSalida.setHours(12, 0, 0, 0);
+    return fechaSalida;
+}
+
+
 export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -85,7 +93,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
         referencia: "20250810-01",
         fechaContrato: new Date(),
         fechaEntrada: new Date(),
-        fechaSalida: new Date(new Date().setDate(new Date().getDate() + 3)),
+        fechaSalida: getDefaultFechaSalida(),
         numPersonas: 1,
         numHabitaciones: 1,
         internet: true,
@@ -104,7 +112,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
         apellido2: "Ruiz",
         tipoDocumento: "NIF",
         numeroDocumento: "12345678T",
-        soporteDocumento: "CIQ119899",
+        soporteDocumento: "ABC123456",
         fechaNacimiento: new Date("1996-02-29"),
         nacionalidad: "ESP",
         sexo: "H",
@@ -128,8 +136,8 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
     startTransition(() => {
         onGenerateXml(data);
         toast({
-            title: "¡XML Generado!",
-            description: "La petición de alta de parte se ha creado correctamente.",
+            title: "¡XML Generado y Descargado!",
+            description: "La petición de alta de parte se ha creado y descargado correctamente.",
         });
     });
   };
@@ -205,7 +213,11 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
         <h3 className="text-lg font-semibold">Datos de la Persona</h3>
         <div className="grid md:grid-cols-2 gap-4">
              <FormField control={form.control} name="persona.rol" render={({ field }) => (
-                <FormItem><FormLabel>Rol</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="VI">Viajero</SelectItem><SelectItem value="CP">Contratante Principal</SelectItem><SelectItem value="CS">Contratante Secundario</SelectItem><SelectItem value="TI">Titular</SelectItem></SelectContent></Select><FormMessage /></FormItem>
+                <FormItem><FormLabel>Rol</FormLabel>
+                <FormControl>
+                    <Input {...field} readOnly className="bg-gray-100 dark:bg-zinc-800" />
+                </FormControl>
+                <FormMessage /></FormItem>
             )} />
              <FormField control={form.control} name="persona.nombre" render={({ field }) => (
                 <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -223,7 +235,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
                 <FormItem><FormLabel>Número Documento</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="persona.soporteDocumento" render={({ field }) => (
-                <FormItem><FormLabel>Soporte Documento</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Soporte Documento</FormLabel><FormControl><Input {...field} placeholder="ABC123456" /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="persona.fechaNacimiento" render={({ field }) => (
                 <FormItem className="flex flex-col"><FormLabel>Fecha de Nacimiento</FormLabel><DatePicker field={field} /><FormMessage /></FormItem>
@@ -272,7 +284,7 @@ export default function TravelerForm({ onGenerateXml }: TravelerFormProps) {
         </div>
         
         <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full" disabled={isPending}>
-          Generar XML de Petición
+          Generar y Descargar XML
         </Button>
       </form>
     </Form>
