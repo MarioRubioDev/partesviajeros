@@ -28,7 +28,6 @@ export default function Home() {
     const direccionXml = persona.direccion.pais === 'ESP'
       ? `
           <codigoMunicipio>${persona.direccion.codigoMunicipio}</codigoMunicipio>
-          <nombreMunicipio>${persona.direccion.nombreMunicipio}</nombreMunicipio>
           <codigoPostal>${persona.direccion.codigoPostal}</codigoPostal>
           <pais>${persona.direccion.pais}</pais>
         `
