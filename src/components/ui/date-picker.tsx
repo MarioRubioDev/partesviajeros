@@ -18,7 +18,7 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ field, showTime = false }: DatePickerProps) {
-  const formatString = showTime ? "PPP HH:mm" : "PPP";
+  const formatString = showTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
   const [dateString, setDateString] = React.useState(field.value ? format(field.value, formatString, { locale: es }) : "");
 
   const handleDateChange = (selectedDate: Date | undefined) => {
@@ -31,7 +31,8 @@ export function DatePicker({ field, showTime = false }: DatePickerProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDateString(e.target.value);
     try {
-      const parsedDate = parse(e.target.value, formatString, new Date());
+      // Use 'dd/MM/yyyy HH:mm' for parsing to be less strict while typing
+      const parsedDate = parse(e.target.value, showTime ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy', new Date());
       if (!isNaN(parsedDate.getTime())) {
           field.onChange(parsedDate);
       }
